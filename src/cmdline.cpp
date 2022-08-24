@@ -1,7 +1,7 @@
 /****************************  cmdline.cpp  **********************************
 * Author:        Agner Fog
 * Date created:  2006-07-25
-* Last modified: 2022-04-28
+* Last modified: 2022-08-24
 * Project:       objconv
 * Module:        cmdline.cpp
 * Description:
@@ -16,33 +16,57 @@
 // List of recognized output file type options
 static SIntTxt TypeOptionNames[] = {
     {CMDL_OUTPUT_ELF,   "elf"},
+    {CMDL_OUTPUT_ELF,   "ELF"},
     {CMDL_OUTPUT_PE,    "pe"},
+    {CMDL_OUTPUT_PE,    "PE"},
     {CMDL_OUTPUT_PE,    "coff"},
+    {CMDL_OUTPUT_PE,    "COFF"},
     {CMDL_OUTPUT_PE,    "cof"},
+    {CMDL_OUTPUT_PE,    "COF"},
     {CMDL_OUTPUT_PE,    "win"},
+    {CMDL_OUTPUT_PE,    "WIN"},
     {CMDL_OUTPUT_OMF,   "omf"},
+    {CMDL_OUTPUT_OMF,   "OMF"},
     {CMDL_OUTPUT_MACHO, "mac"},
+    {CMDL_OUTPUT_MACHO, "MAC"},
     {CMDL_OUTPUT_MACHO, "macho"},
+    {CMDL_OUTPUT_MACHO, "MACHO"},
     {CMDL_OUTPUT_MACHO, "mach-o"},
+    {CMDL_OUTPUT_MACHO, "MACH-O"},
     {CMDL_OUTPUT_MACHO, "mach"},
+    {CMDL_OUTPUT_MACHO, "MACH"},
     {CMDL_OUTPUT_MASM,  "asm"},
+    {CMDL_OUTPUT_MASM,  "ASM"},
     {CMDL_OUTPUT_MASM,  "masm"},
+    {CMDL_OUTPUT_MASM,  "MASM"},
     {CMDL_OUTPUT_MASM,  "tasm"},
+    {CMDL_OUTPUT_MASM,  "TASM"},
     {CMDL_OUTPUT_MASM,  "nasm"},
+    {CMDL_OUTPUT_MASM,  "NASM"},
     {CMDL_OUTPUT_MASM,  "yasm"},
+    {CMDL_OUTPUT_MASM,  "YASM"},
     {CMDL_OUTPUT_MASM,  "gasm"},
-    {CMDL_OUTPUT_MASM,  "gas"}
+    {CMDL_OUTPUT_MASM,  "GASM"},
+    {CMDL_OUTPUT_MASM,  "gas"},
+    {CMDL_OUTPUT_MASM,  "GAS"}
 };
 
 // List of subtype names
 static SIntTxt SubtypeNames[] = {
     {SUBTYPE_MASM,  "asm"},
+    {SUBTYPE_MASM,  "ASM"},
     {SUBTYPE_MASM,  "masm"},
+    {SUBTYPE_MASM,  "MASM"},
     {SUBTYPE_MASM,  "tasm"},
+    {SUBTYPE_MASM,  "TASM"},
     {SUBTYPE_NASM,  "nasm"},
+    {SUBTYPE_NASM,  "NASM"},
     {SUBTYPE_NASM,  "yasm"},
+    {SUBTYPE_NASM,  "YASM"},
     {SUBTYPE_GASM,  "gasm"},
-    {SUBTYPE_GASM,  "gas"}
+    {SUBTYPE_GASM,  "GASM"},
+    {SUBTYPE_GASM,  "gas"},
+    {SUBTYPE_GASM,  "GAS"}
 };
 
 // List of standard names that are always translated
