@@ -1,3 +1,8 @@
+2022-08-25 version 2.54
+* support uppercase format names for option -fXXX
+* add support for changing COMDAT selection
+* add (simple) CMake support
+
 2022-04-28 version 2.53
 * add disassembler support for AVX512-FP16, etc.
 
