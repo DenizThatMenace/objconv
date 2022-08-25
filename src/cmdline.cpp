@@ -259,6 +259,15 @@ void CCommandLineInterpreter::InterpretCommandOption(char * string) {
         err.submit(1001); return;    // Warning: empty option
     }
 
+    // Remove trailing whitespace characters.
+    for (size_t length = strlen(string); length > 0; --length) {
+        if (string[length-1] <= ' ') {
+            *(string + length - 1) = 0;
+        } else {
+            break;
+        }
+    }
+
     // Detect option type
     switch(string[0]) {
     case 'f': case 'F':   // output file format
@@ -289,6 +298,9 @@ void CCommandLineInterpreter::InterpretCommandOption(char * string) {
     case 'n': case 'N':   // Symbol name change option
     case 'a': case 'A':   // Symbol name alias option
         InterpretSymbolNameChangeOption(string);  break;
+
+    case 's': case 'S':   // COMDAT change option
+        InterpretComdatChangeOption(string);  break;
 
     case 'i': case 'I':   // Imagebase
         if ((string[1] | 0x20) == 'm') {
@@ -626,6 +638,82 @@ void CCommandLineInterpreter::InterpretErrorOption(char * string) {
     }
 }
 
+void CCommandLineInterpreter::InterpretComdatChangeOption(char * string) {
+    // Interpret option(s) for changing COMDAT sections
+    SComdatChange comdat = {0,0,0,0};   // COMDAT change record
+    string[0] |= 0x20;  // change first letter to lower case
+
+    // Check for section number and COMDAT info in this command
+    int numDigits;
+    char * numberStr;
+
+    switch (string[1]) {
+    case 'c': case 'C':  // section definition COMDAT option
+        comdat.Action = SYMA_CHANGE_COMDAT;
+
+        if (string[2] != ':' || string[3] == 0) {
+            err.submit(2004, string);  // Unknown option
+            return;
+        }
+
+        // parse section
+        numberStr = string + 3;  // Start of section number
+        numDigits = strspn(numberStr, "0123456789");
+        if (numDigits == 0 || numberStr[numDigits] != ':') {
+            err.submit(2340, string);  // Valid section number missing
+            return;
+        }
+        if (numDigits > 5) {
+            err.submit(2342, string);  // Section number too large
+            return;
+        }
+        comdat.Section = atoi(numberStr);  // Convert to integer.
+        if (comdat.Section > 0x7FFF) {
+            err.submit(2342, string);  // Section number too large
+            return;
+        }
+
+        // parse COMDAT selection number
+        numberStr += numDigits + 1;  // Start of COMDAT selection number
+        numDigits = strspn(numberStr, "123456");
+        if (numDigits != 1 || (numberStr[1] != 0 && numberStr[1] != ':')){
+            err.submit(2344, string);  // COMDAT selection number not from range [1,6]
+            return;
+        }
+        comdat.Selection = (int)(numberStr[0] - '0');  // Convert to integer from ASCII number.
+        if (comdat.Selection != 5 && numberStr[1] == ':') {
+            err.submit(2345, string);  // Associated section only valid for COMDAT selection of 5
+            return;
+        }
+
+        // parse associated section
+        if (comdat.Selection == 5) {
+            numberStr += numDigits + 1;  // Start of associated section number
+            numDigits = strspn(numberStr, "0123456789");
+            if (numDigits == 0 || numberStr[numDigits] != 0) {
+                err.submit(2341, string);  // Valid associated section number missing
+                return;
+            }
+            if (numDigits > 5) {
+                err.submit(2343, string);  // Associated section number too large
+                return;
+            }
+            comdat.Associate = atoi(numberStr);  // Convert to integer.
+            if (comdat.Section > 0x7FFF) {
+                err.submit(2343, string);  // Associated section number too large
+                return;
+            }
+        }
+        break;
+
+    default:
+        err.submit(2004, string);  // Unknown option
+    }
+
+    // Store COMDAT change in list of changes.
+    ComdatList.Push(&comdat, sizeof(comdat));  ComdatChangeEntries++;
+}
+
 void CCommandLineInterpreter::InterpretSymbolNameChangeOption(char * string) {
     // Interpret various options for changing symbol names
     SSymbolChange sym = {0,0,0,0};   // Symbol change record
@@ -860,6 +948,27 @@ int CCommandLineInterpreter::SymbolIsInList(char const * name) {
         if (strcmp(name, psym->Name1) == 0) return 1;  // Matching name found
     }
     return 0;
+}
+
+
+int CCommandLineInterpreter::ComdatChange(int section, int * newselection, int * newassociate) {
+    // Check if symbol's COMDAT has to be changed
+    int action = SYMA_NOCHANGE, isym;
+    int nsym = ComdatList.GetNumEntries();
+    if (section == 0) return SYMA_NOCHANGE;
+
+    SComdatChange * List = (SComdatChange *)ComdatList.Buf(), * psym;
+    // search for section number in list of sections specified by user on command line
+    for (isym = 0, psym = List; isym < nsym; isym++, psym++) {
+        if (section == psym->Section) break;  // Matching section found
+    }
+    if (isym < nsym) {
+        // A matching section was found.
+        action = psym->Action;
+        *newselection = psym->Selection;
+        *newassociate = psym->Associate;
+    }
+    return action;
 }
 
 
@@ -1121,7 +1230,8 @@ int CCommandLineInterpreter::SymbolChangesRequested() {
     // Any kind of symbol change requested on command line
     return (Underscore != 0) 
         | (SegmentDot != 0) << 1 
-        | (SymbolChangeEntries != 0) << 2;
+        | (SymbolChangeEntries != 0) << 2
+        | (ComdatChangeEntries != 0) << 3;
 }
 
 
@@ -1212,6 +1322,10 @@ void CCommandLineInterpreter::Help() {
     printf("\n-as:N1:N2  Replace symbol Suffix and keep old name as alias.");
     printf("\n-nw:N1     make public symbol Name N1 Weak (ELF and MAC64 only).");
     printf("\n-nl:N1     make public symbol Name N1 Local (invisible).\n");
+
+    printf("\n-sc:S:N    Change section definition S's COMDAT selection to N (COFF and OMF only).");
+    printf("\n-sc:S:5:N  Change section definition S's COMDAT selection to '5' and its number to N (COFF and OMF only).\n");
+
     //printf("\n-ds        Strip Debug info.");    // default if input and output are different formats
     //printf("\n-dp        Preserve Debug info, even if it is incompatible.");
     printf("\n-xs        Strip exception handling info and other incompatible info.");  // default if input and output are different formats. Hides unused symbols
