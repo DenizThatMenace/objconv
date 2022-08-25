@@ -1,7 +1,7 @@
 /****************************   error.cpp   **********************************
 * Author:        Agner Fog
 * Date created:  2006-07-15
-* Last modified: 2017-10-18
+* Last modified: 2022-08-25
 * Project:       objconv
 * Module:        error.cpp
 * Description:
@@ -162,6 +162,12 @@ SErrorText ErrorTexts[] = {
    {2330, 2, "Imagebase specified more than once"},
    {2331, 2, "Imagebase must be divisible by page size 1000 (hexadecimal)"},
    {2332, 2, "Imagebase must > 0 and < 80000000 (hexadecimal)"},
+   {2340, 2, "Valid section number is missing: %s"},
+   {2341, 2, "Valid associated section number is missing: %s"},
+   {2342, 2, "Section number exceeds 32767: %s"},
+   {2343, 2, "Associated section number exceeds 32767: %s"},
+   {2344, 2, "COMDAT selection number must > 0 and < 7: %s"},
+   {2345, 2, "Index to associated section is only valid for COMDAT selection number 5: %s"},
 
    {2500, 2, "Library/archive file is corrupt"},
    {2501, 2, "Cannot store file of type %s in library"},

@@ -1,7 +1,7 @@
 /****************************  cmdline.h   ***********************************
 * Author:        Agner Fog
 * Date created:  2006-07-25
-* Last modified: 2006-07-25
+* Last modified: 2022-08-25
 * Project:       objconv
 * Module:        cmdline.h
 * Description:
@@ -92,13 +92,14 @@
 #define SYMT_LIBRARYMEMBER      0x1000     // Name of library member
 
 // Constants for symbol change action as defined in SSymbolChange::Action 
-// and output from CCommandLineInterpreter::SymbolChange()
+// and output from CCommandLineInterpreter::SymbolChange() and CCommandLineInterpreter::ComdatChange()
 #define SYMA_NOCHANGE                0     // Do nothing
 #define SYMA_MAKE_WEAK               1     // Make symbol weak
 #define SYMA_MAKE_LOCAL              2     // Make symbol local
 #define SYMA_CHANGE_NAME          0x10     // Change name of symbol
 #define SYMA_CHANGE_PREFIX        0x11     // Change beginning of symbol name
 #define SYMA_CHANGE_SUFFIX        0x12     // Change end of symbol name
+#define SYMA_CHANGE_COMDAT        0x14     // Change COMDAT of symbol
 #define SYMA_ALIAS               0x100     // Make alias of public symbol and keep old name, must be combined 
                                            // with SYMA_CHANGE_NAME, SYMA_CHANGE_PREFIX or SYMA_CHANGE_SUFFIX
 #define SYMA_ADD_MEMBER         0x1001     // Add member to library
@@ -113,12 +114,21 @@ struct SSymbolChange {
    int    Done;                            // Count how many times this has been done
 };
 
+// Structure for specifying desired change of a COMDAT section
+struct SComdatChange {
+   int    Section;                         // Number of section that will be modified
+   int    Selection;                       // Number of new COMDAT selection
+   int    Associate;                       // Number of the associated COMDAT section (if COMDAT selection has value 5)
+   int    Action;                          // Action to take on symbol (currently only SYMA_CHANGE_COMDAT)
+};
+
 // Class for interpreting command line
 class CCommandLineInterpreter {
 public:
    CCommandLineInterpreter();                // Default constructor
    ~CCommandLineInterpreter();               // Destructor
    void ReadCommandLine(int argc, char * argv[]);     // Read and interpret command line
+   int  ComdatChange(int section, int * newselection, int * newassociate); // Check if symbol's COMDAT has to be changed
    int  SymbolChange(char const * oldname, char const ** newname, int symtype); // Check if symbol has to be changed
    int  SymbolIsInList(char const * name);   // Check if symbol is in SymbolList
    int  SymbolChangesRequested();            // Any kind of symbol change requested on command line
@@ -159,6 +169,7 @@ protected:
    void InterpretDebugInfoOption(char *);    // Interpret debug info option from command line
    void InterpretExceptionInfoOption(char*); // Interpret exception handler info option from command line
    void InterpretErrorOption(char *);        // Interpret error option from command line
+   void InterpretComdatChangeOption(char *); // Interpret options for changing COMDAT sections
    void InterpretSymbolNameChangeOption(char *);  // Interpret various options for changing symbol names
    void InterpretLibraryOption(char *);      // Interpret options for manipulating library/archive files
    void InterpretImagebaseOption(char *);    // Interpret image base option
@@ -166,7 +177,9 @@ protected:
    void Help();                              // Print help message
    CArrayBuf<CFileBuffer> ResponseFiles;     // Array of up to 10 response file buffers
    int NumBuffers;                           // Number of response file buffers
+   int ComdatChangeEntries;                  // Number of entries in ComdatList
    int SymbolChangeEntries;                  // Number of entries in SymbolList, except library entries
+   CMemoryBuffer ComdatList;                 // List of COMDAT sections to change. Contains entries of type SComdatChange
    CMemoryBuffer SymbolList;                 // List of symbol names to change. Contains entries of type SSymbolChange
    CMemoryBuffer MemberNames;                // Buffer containing truncated member names
    uint32_t MemberNamesAllocated;              // Size of buffer in MemberNames
