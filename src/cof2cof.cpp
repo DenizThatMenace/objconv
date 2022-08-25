@@ -1,7 +1,7 @@
 /****************************   cof2cof.cpp   *********************************
 * Author:        Agner Fog
 * Date created:  2006-07-28
-* Last modified: 2006-07-28
+* Last modified: 2022-08-25
 * Project:       objconv
 * Module:        cof2cof.cpp
 * Description:
@@ -33,6 +33,8 @@ void CCOF2COF::MakeSymbolTable() {
    int symboltype = 0;         // Symbol type
    int action = 0;             // Symbol change action
    int isec;                   // Section number
+   int selection;              // COMDAT selection number
+   int associate;              // Index of associated section (for COMDAT selection of 5)
 
    const char * name1;         // Old name of symbol
    const char * name2;         // Changed name of symbol
@@ -60,7 +62,7 @@ void CCOF2COF::MakeSymbolTable() {
       // Check symbol type
       if (numaux && OldSymtab.p->s.StorageClass == COFF_CLASS_STATIC) {
          // This is a section definition record
-         // aux record contains length and number of relocations. Ignore aux record
+         // aux record contains length and number of relocations and possibly COMDAT info.
          symboltype = SYMT_SECTION;
          name1 = GetSymbolName(OldSymtab.p->s.Name);
       }
@@ -96,6 +98,25 @@ void CCOF2COF::MakeSymbolTable() {
          }
       }
       name3 = name1;
+
+      if (symboltype == SYMT_SECTION) {
+         // Check if any change required for this section's COMDAT
+         action = cmd.ComdatChange(OldSymtab.p->s.SectionNumber, &selection, &associate);
+
+         switch (action) {
+         case SYMA_NOCHANGE:
+            // No change
+            break;
+         case SYMA_CHANGE_COMDAT:
+            // Modify aux record
+            sa->section.Selection = (uint8_t)selection;
+            sa->section.Number = (uint16_t)associate;
+            break;
+         default:
+            err.submit(9000); // unknown error
+         }
+      }
+
       // Check if any change required for this symbol
       action = cmd.SymbolChange(name1, &name2, symboltype);
 
