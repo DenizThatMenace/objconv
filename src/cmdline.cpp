@@ -1,7 +1,7 @@
 /****************************  cmdline.cpp  **********************************
 * Author:        Agner Fog
 * Date created:  2006-07-25
-* Last modified: 2022-04-28
+* Last modified: 2022-08-31
 * Project:       objconv
 * Module:        cmdline.cpp
 * Description:
@@ -16,8 +16,11 @@
 // List of recognized output file type options
 static SIntTxt TypeOptionNames[] = {
     {CMDL_OUTPUT_ELF,   "elf"},
+    {CMDL_OUTPUT_ELF,   "ELF"},
     {CMDL_OUTPUT_PE,    "pe"},
+    {CMDL_OUTPUT_PE,    "PE"},
     {CMDL_OUTPUT_PE,    "coff"},
+    {CMDL_OUTPUT_PE,    "COFF"},
     {CMDL_OUTPUT_PE,    "cof"},
     {CMDL_OUTPUT_PE,    "win"},
     {CMDL_OUTPUT_OMF,   "omf"},
