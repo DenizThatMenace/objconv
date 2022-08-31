@@ -1295,10 +1295,12 @@ void CCommandLineInterpreter::ReportStatistics() {
     }
 }
 
+#define INNER_STRINGIFY(str) #str
+#define STRINGIFY(str) INNER_STRINGIFY(str)
 
 void CCommandLineInterpreter::Help() {
     // Print help message
-    printf("\nObject file converter version %.2f for x86 and x86-64 platforms.", OBJCONV_VERSION);
+    printf("\nObject file converter version %s for x86 and x86-64 platforms.", STRINGIFY(OBJCONV_VERSION));
     printf("\nCopyright (c) 2022 by Agner Fog. Gnu General Public License.");
     printf("\n\nUsage: objconv options inputfile [outputfile]");
     printf("\n\nOptions:");
