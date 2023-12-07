@@ -1,7 +1,7 @@
 /****************************   main.cpp   **********************************
 * Author:        Agner Fog
 * Date created:  2006-07-26
-* Last modified: 2011-10-28
+* Last modified: 2022-08-25
 * Project:       objconv
 * Module:        main.cpp
 * Description:
@@ -641,7 +641,7 @@ void CConverter::Go() {
                err.submit(1008);       // Warning: Converting to ELF and back again
             }
             if (cmd.SymbolChangesRequested()) {
-               COF2COF();              // Make symbol name changes in COFF file
+               COF2COF();              // Make symbol changes in COFF file
             }
             else if (cmd.DebugInfo != CMDL_DEBUG_STRIP && cmd.ExeptionInfo != CMDL_EXCEPTION_STRIP && !cmd.LibraryOptions) {
                err.submit(1006);       // Warning: nothing to do
